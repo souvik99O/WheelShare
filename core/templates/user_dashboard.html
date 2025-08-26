@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: #f9f9f9;
+      font-family: 'Segoe UI', sans-serif;
+    }
+
+    .map-container {
+      height: 400px;
+      width: 100%;
+      margin-bottom: 2rem;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .navbar {
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .cycle-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 24px;
+      padding: 24px;
+    }
+
+    .cycle-card {
+      background-color: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+      overflow: hidden;
+      transition: transform 0.2s ease, box-shadow 0.3s ease;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .cycle-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
+    }
+
+    .cycle-card img {
+      width: 100%;
+      height: 300px;
+      object-fit: cover;
+    }
+
+    .cycle-info {
+      padding: 16px;
+    }
+
+    .cycle-info h5 {
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .cycle-info p {
+      margin: 4px 0;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .btn {
+      margin-top: 12px;
+      width: 100%;
+      background-color: #0d6efd;
+      color: white;
+      border: none;
+      padding: 10px;
+      border-radius: 8px;
+      transition: background-color 0.2s ease;
+    }
+
+    .btn:hover {
+      background-color: #084dbf;
+    }
+
+    #loading {
+      text-align: center;
+      padding: 20px;
+      color: #777;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Navbar -->
+  <nav class="navbar navbar-expand-lg navbar-light bg-light sticky-top">
+    <div class="container-fluid px-5">
+      <div class="d-flex">
+        <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <ul class="navbar-nav">
+            <li class="nav-item"> <a class="nav-link" href="{% url 'about' %}">About</a></li>
+            <li class="nav-item"> <a class="nav-link" href="{% url 'contact' %}">Contact</a></li>
+          </ul>
+        </ul>
+      </div>
+
+      <div class="mx-auto">
+        <a class="navbar-brand" href="#">
+          <img src="/static/images/logo.png" alt="Logo" width="170" height="75">
+        </a>
+      </div>
+
+      <div class="d-flex">
+        <a class="btn btn-outline-primary me-2" href="{% url 'logout' %}">Logout</a>
+      </div>
+    </div>
+  </nav>
+  {% if active_rental %}
+  <div class="d-flex justify-content-center mt-5">
+    <div class="card p-4 px-md-5 py-md-4 shadow-lg border-0 rounded-5 bg-white" style="max-width: 1100px; width: 100%;">
+      <h4 class="mb-4 text-center text-success fw-bold">Your Current Cycle Rental</h4>
+      
+      <div class="row g-4 text-center">
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">My Name</p>
+            <p class="fw-semibold texntet-dark">{{ request.user.get_full_name }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">My Email</p>
+            <p class="fw-semibold text-dark">{{ request.user.email }}</p>
+          </div>
+        </div>
+
+        {% if request.user.profile.phone_number %}
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">Phone</p>
+            <p class="fw-semibold text-dark">{{ request.user.profile.phone_number }}</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">Cycle</p>
+            <p class="fw-semibold text-dark">{{ active_rental.cycle.name }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">Rate (per hour)</p>
+            <p class="fw-semibold text-dark">₹{{ active_rental.cycle.rate_per_hour }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">Start Time</p>
+            <p class="fw-semibold text-dark">{{ active_rental.start_time|date:"F j, Y, g:i a" }}</p>
+          </div>
+        </div>
+
+        <div class="col-md-4">
+          <div class="p-3 border rounded-4 bg-light shadow-sm">
+            <p class="text-muted mb-1">Expected Return</p>
+            {% if active_rental.end_time %}
+              <p class="fw-semibold text-dark">{{ active_rental.end_time|date:"F j, Y, g:i a" }}</p>
+            {% else %}
+              <p class="text-muted fst-italic">Not available</p>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+{% endif %}
+<br>
+<h2 class="mb-4 text-center text-success fw-bold">Available Bikes Nearby</h2>
+
+  <div class="container-fluid mt-3">
+    <div class="map-container" id="map"></div>
+  </div>
+
+  <!-- Cycle Cards -->
+  <div id="cycle-list" class="cycle-grid">
+    {% for cycle in cycles %}
+    <div class="cycle-card">
+      <img src="{% if cycle.image %}{{ cycle.image.url }}{% else %}https://via.placeholder.com/300x200?text=No+Image{% endif %}" alt="{{ cycle.name }}">
+      <div class="cycle-info">
+        <h5>{{ cycle.name }}</h5>
+        <p><strong>Owner:</strong> {{ cycle.owner.email }}</p>
+        <p><strong>Phone:</strong> {{ cycle.owner.userprofile.phone_number }}</p>
+        <p><strong>Rate:</strong> ₹{{ cycle.rate_per_hour }}/hr</p>
+        <button class="btn btn-primary mt-2 confirm-booking-btn" data-cycle-id="{{ cycle.id }}">Book Now</button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div id="loading" style="display: none;">Loading more cycles...</div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+  <script>
+    const map = L.map('map').setView([13.34400563962379, 74.79494032613833], 14);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    const cycleData = {{ cycle_data_json | safe }};
+    cycleData.forEach(cycle => {
+      L.marker([cycle.location_lat, cycle.location_lng])
+        .addTo(map)
+        .bindPopup(`<b>${cycle.name}</b><br>₹${cycle.rate_per_hour}/hr`);
+    });
+  </script>
+
+    <div class="modal fade" id="bookingModal" tabindex="-1" aria-labelledby="bookingModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 shadow">
+          <div class="modal-header">
+            <h5 class="modal-title" id="bookingModalLabel">Book Cycle</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <form id="bookingForm">
+            <div class="modal-body">
+              <input type="hidden" id="cycleId" name="cycle_id">
+              <div class="mb-3">
+                <label for="message" class="form-label">Message to Owner</label>
+                <textarea class="form-control" id="message" name="message" rows="3" required></textarea>
+              </div>
+              <div class="mb-3">
+                <label for="endTime" class="form-label">Rent End Time</label>
+                <input type="datetime-local" class="form-control" id="endTime" name="end_time" required>
+              </div>
+              <div class="mb-3">
+                <label for="phoneNumber" class="form-label">Your Phone Number</label>
+                <input type="tel" class="form-control" id="phoneNumber" name="phone" required>
+              </div>
+            </div>
+            <div class="modal-footer">
+              <button type="submit" class="btn btn-primary w-100">Confirm Booking</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+      const bookingModal = new bootstrap.Modal(document.getElementById("bookingModal"));
+      const bookingForm = document.getElementById("bookingForm");
+
+      document.querySelectorAll(".confirm-booking-btn").forEach(button => {
+          button.addEventListener("click", function () {
+              const cycleId = this.dataset.cycleId;
+              document.getElementById("cycleId").value = cycleId;
+              bookingForm.reset();
+              bookingModal.show();
+          });
+      });
+
+      bookingForm.addEventListener("submit", function (e) {
+          e.preventDefault();
+
+          const cycleId = document.getElementById("cycleId").value;
+          const message = document.getElementById("message").value;
+          const endTime = document.getElementById("endTime").value;
+          const phone = document.getElementById("phoneNumber").value;
+
+          fetch("{% url 'submit_booking' %}", {
+              method: "POST",
+              headers: {
+                  "Content-Type": "application/json",
+                  "X-CSRFToken": "{{ csrf_token }}"
+              },
+              body: JSON.stringify({
+                  cycle_id: cycleId,
+                  end_time: endTime,
+                  message: message,
+                  phone: phone
+              })
+          })
+          .then(res => res.json())
+          .then(data => {
+              if (data.status === "success") {
+                  bookingModal.hide();
+                  setTimeout(() => {
+                      const successModal = new bootstrap.Modal(document.createElement('div'));
+                      alert("Booking submitted successfully!");
+                      window.location.reload();
+                  }, 200);
+              } else {
+                  alert("Error: " + data.error);
+              }
+          })
+          .catch(error => {
+              console.error("Error submitting booking:", error);
+              alert("Something went wrong.");
+          });
+      });
+  });
+    </script>
+
+  <script>
+    let page = 2;
+    let loading = false;
+
+    function loadMoreCycles() {
+      if (loading) return;
+      loading = true;
+      document.getElementById("loading").style.display = "block";
+
+      fetch(`/user/dashboard/?page=${page}`, {
+        headers: { "X-Requested-With": "XMLHttpRequest" }
+      })
+        .then(response => response.json())
+        .then(data => {
+          const grid = document.getElementById("cycle-list");
+
+          data.cycles.forEach(cycle => {
+            const imgUrl = cycle.image_url ? cycle.image_url : "https://via.placeholder.com/300x200?text=No+Image";
+
+            const card = document.createElement("div");
+            card.className = "cycle-card";
+            card.innerHTML = `
+              <img src="${imgUrl}" alt="${cycle.name}">
+              <div class="cycle-info">
+                <h5>${cycle.name}</h5>
+                <p><strong>Owner:</strong> ${cycle.owner}</p>
+                <p><strong>Phone:</strong> ${cycle.phone}</p>
+                <p><strong>Rate:</strong> ₹${cycle.rate}/hr</p>
+                <button class="btn btn-primary mt-2 confirm-booking-btn" data-cycle-id="{{ cycle.id }}">Book Now</button>
+              </div>
+            `;
+            grid.appendChild(card);
+          });
+
+          if (data.cycles.length > 0) {
+            page += 1;
+            loading = false;
+          }
+          document.getElementById("loading").style.display = "none";
+        })
+        .catch(error => {
+          console.error("Error fetching cycles:", error);
+          loading = false;
+          document.getElementById("loading").style.display = "none";
+        });
+    }
+
+    window.addEventListener('scroll', () => {
+      if (window.innerHeight + window.scrollY >= document.body.offsetHeight - 200) {
+        loadMoreCycles();
+      }
+    });
+
+    
+  </script>
+
+</body>
+
+</html>

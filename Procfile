@@ -1,0 +1,1 @@
+web: gunicorn cycle_rent.wsgi

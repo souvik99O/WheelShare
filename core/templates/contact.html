@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width">
+  <title>WheelShare - Contact Us</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+  <div class="container-fluid px-5">
+
+    <div class="d-flex">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link" href="{% url 'home' %}">Home</a></li>
+        <li class="nav-item"><a class="nav-link" href="{% url 'about' %}">About</a></li>
+        <li class="nav-item"><a class="nav-link active" href="{% url 'contact' %}">Contact</a></li>
+      </ul>
+    </div>
+
+    <div class="mx-auto">
+      <a class="navbar-brand" href="#">
+        <img src="/static/images/logo.png" alt="Logo" width="170" height="75" class="d-inline-block align-text-top">
+      </a>
+    </div>
+    <div style="width: 200px;"></div>
+  </div>
+</nav>
+
+<div class="hero-section py-5" style="background-image: url('{% static "images/hero_bg.png" %}'); background-size: cover; background-position: center; z-index: 1;">
+  <div class="container animate__animated animate__fadeInUp animate__faster">
+    <div class="row justify-content-center">
+      <div class="col-md-8 col-lg-6">
+        <div class="card p-5 shadow-lg rounded-4">
+          <div class="text-center mb-4">
+            <h2 class="text-primary">Contact Our Team</h2>
+            <p class="text-muted">
+              Have a question about rentals, tech support, or feedback? Our team is here to help you navigate your WheelShare experience smoothly.
+              Reach out to the team members below or drop us a message!
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <h6 class="text-primary">📞 John Mathews</h6>
+            <p class="text-muted mb-1">Phone: +91 98765 43210</p>
+            <p class="text-muted">Email: john.mathews@wheelshare.in</p>
+
+            <h6 class="text-primary mt-3">📞 Anjali Ramesh</h6>
+            <p class="text-muted mb-1">Phone: +91 91234 56789</p>
+            <p class="text-muted">Email: anjali.ramesh@wheelshare.in</p>
+
+            <p class="mt-4 text-muted small text-center">
+              For general queries, write to us at <strong>support@wheelshare.in</strong> and we’ll get back to you shortly.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer class="bg-dark text-white pt-4 pb-2 mt-auto">
+  <div class="container text-center">
+    <p class="mb-1">&copy; 2025 WheelShare. All rights reserved.</p>
+    <p class="mb-0 small">Designed for college campuses • Built with Django & Bootstrap</p>
+  </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
